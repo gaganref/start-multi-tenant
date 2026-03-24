@@ -1,6 +1,16 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRoute,
+} from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import {
+  ThemeProvider,
+  useHtmlAttributes,
+  useBodyAttributes,
+} from "@tanstack-themes/react"
 
 import appCss from "../styles.css?url"
 
@@ -15,26 +25,42 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: "Multi-Tenant Lab — TanStack Start × Vercel",
       },
     ],
     links: [
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
     ],
   }),
-  shellComponent: RootDocument,
+  component: RootComponent,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootComponent() {
   return (
-    <html lang="en">
+    <RootDocument>
+      <ThemeProvider />
+      <Outlet />
+    </RootDocument>
+  )
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  const htmlAttributes = useHtmlAttributes()
+  const bodyAttributes = useBodyAttributes()
+
+  return (
+    <html lang="en" {...htmlAttributes}>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body {...bodyAttributes}>
         {children}
         <TanStackDevtools
           config={{
