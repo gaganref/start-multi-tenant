@@ -6,6 +6,7 @@ import { TestCard, type TestCardProps } from "@/components/landing/test-card"
 import { ThemeToggle } from "@/components/landing/theme-toggle"
 import { buttonVariants } from "@/components/ui/button"
 import { useTenantContext } from "@/hooks/use-tenant-context"
+import { listMockTenantHosts } from "@/lib/tenant/mock-tenant-context"
 
 export const Route = createFileRoute("/")({ component: Landing })
 
@@ -64,6 +65,8 @@ const stack = [
   "shadcn/ui",
   "Vercel",
 ] as const
+
+const mockHosts = listMockTenantHosts()
 
 function Landing() {
   const tenantContext = useTenantContext()
@@ -176,6 +179,24 @@ function Landing() {
                   value={tenantContext?.tenant ?? "root"}
                   mono
                 />
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={380} className="mt-6 max-w-2xl">
+            <div className="rounded-xl border border-border bg-card/60 p-5 shadow-sm backdrop-blur-sm">
+              <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+                Mock Tenant Hosts
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {mockHosts.map((tenant) => (
+                  <span
+                    key={tenant.host}
+                    className="rounded-lg border border-border bg-background px-2.5 py-1 font-mono text-xs text-muted-foreground"
+                  >
+                    {tenant.host}
+                  </span>
+                ))}
               </div>
             </div>
           </Reveal>
