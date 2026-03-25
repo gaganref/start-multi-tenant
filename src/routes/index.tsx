@@ -1,24 +1,13 @@
-import { createFileRoute, useHydrated } from "@tanstack/react-router"
-import { toggleThemeMode, useTheme } from "@tanstack-themes/react"
+import { createFileRoute } from "@tanstack/react-router"
+import { ContextRow } from "@/components/landing/context-row"
+import { Legend } from "@/components/landing/legend"
+import { Reveal } from "@/components/landing/reveal"
+import { TestCard, type TestCardProps } from "@/components/landing/test-card"
+import { ThemeToggle } from "@/components/landing/theme-toggle"
 import { buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { useTenantContext } from "@/hooks/use-tenant-context"
 
 export const Route = createFileRoute("/")({ component: Landing })
-
-type TestStatus = "active" | "testing" | "planned"
-
-type TestItem = {
-  title: string
-  description: string
-  status: TestStatus
-  tag: string
-}
-
-const statusDotClasses: Record<TestStatus, string> = {
-  active: "bg-emerald-500",
-  testing: "bg-amber-500",
-  planned: "bg-zinc-300 dark:bg-zinc-600",
-}
 
 const tests = [
   {
@@ -63,7 +52,7 @@ const tests = [
     status: "active",
     tag: "vercel",
   },
-] satisfies ReadonlyArray<TestItem>
+] satisfies ReadonlyArray<TestCardProps>
 
 const stack = [
   "TanStack Start",
@@ -244,166 +233,5 @@ function Landing() {
         </div>
       </footer>
     </div>
-  )
-}
-
-function useTenantContext() {
-  const hydrated = useHydrated()
-
-  if (!hydrated || typeof window === "undefined") {
-    return null
-  }
-
-  const { host, hostname } = window.location
-  const parts = hostname.split(".")
-  const subdomain = parts.length > 2 ? parts[0] : null
-
-  return {
-    host,
-    subdomain,
-    tenant: subdomain ?? "root",
-  }
-}
-
-function Reveal({
-  as: Component = "div",
-  delay,
-  className,
-  children,
-}: {
-  as?: "div" | "h1" | "p"
-  delay: number
-  className?: string
-  children: React.ReactNode
-}) {
-  return (
-    <Component
-      className={cn("animate-fade-up", className)}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      {children}
-    </Component>
-  )
-}
-
-function ContextRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string
-  value: string
-  mono?: boolean
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
-      <span className={cn("truncate text-sm", mono && "font-mono")}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function TestCard({
-  title,
-  description,
-  status,
-  tag,
-}: {
-  title: string
-  description: string
-  status: TestStatus
-  tag: string
-}) {
-  return (
-    <div className="group rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-border/60 hover:shadow-md">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">
-          {tag}
-        </span>
-        <div className={cn("size-2 rounded-full", statusDotClasses[status])} />
-      </div>
-      <h3 className="mb-1.5 text-sm font-medium transition-colors group-hover:text-foreground">
-        {title}
-      </h3>
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-    </div>
-  )
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className={cn("size-1.5 rounded-full", color)} />
-      <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
-  )
-}
-
-function ThemeToggle() {
-  const hydrated = useHydrated()
-  const mode = useTheme((s) => s.mode)
-
-  return (
-    <button
-      type="button"
-      onClick={toggleThemeMode}
-      className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      aria-label={`Theme: ${hydrated ? mode : "auto"}`}
-    >
-      {!hydrated || mode === "auto" ? (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M8 21h8" />
-          <path d="M12 17v4" />
-        </svg>
-      ) : mode === "light" ? (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m6.34 17.66-1.41 1.41" />
-          <path d="m19.07 4.93-1.41 1.41" />
-        </svg>
-      ) : (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-        </svg>
-      )}
-    </button>
   )
 }
