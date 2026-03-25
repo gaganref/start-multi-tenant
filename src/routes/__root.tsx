@@ -11,10 +11,17 @@ import {
   useHtmlAttributes,
   useBodyAttributes,
 } from "@tanstack-themes/react"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { DefaultNotFound } from "@/components/default-not-found"
+import { DefaultError } from "@/components/default-error"
+import { DefaultPending } from "@/components/default-pending"
 
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
+  notFoundComponent: DefaultNotFound,
+  errorComponent: DefaultError,
+  pendingComponent: DefaultPending,
   head: () => ({
     meta: [
       {
@@ -57,7 +64,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body {...bodyAttributes}>
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",
