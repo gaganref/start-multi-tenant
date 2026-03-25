@@ -11,6 +11,7 @@ import {
   useHtmlAttributes,
   useBodyAttributes,
 } from "@tanstack-themes/react"
+import { MultiTenantDevtoolsPanel } from "@/components/devtools/multi-tenant-devtools-panel"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { DefaultNotFound } from "@/components/default-not-found"
 import { DefaultError } from "@/components/default-error"
@@ -74,6 +75,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             {
               name: "Tanstack Router",
               render: <TanStackRouterDevtoolsPanel />,
+            },
+            {
+              id: "multi-tenant-lab",
+              name: "Multi-Tenant Lab",
+              render: <MultiTenantDevtoolsPanel />,
+              defaultOpen: true,
             },
           ]}
         />

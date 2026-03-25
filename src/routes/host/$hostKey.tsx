@@ -1,9 +1,5 @@
-import {
-  Link,
-  Outlet,
-  createFileRoute,
-  notFound,
-} from "@tanstack/react-router"
+import { useEffect } from "react"
+import { Link, Outlet, createFileRoute, notFound } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -13,8 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  clearMultiTenantDevtoolsSnapshot,
+  setMultiTenantDevtoolsSnapshot,
+} from "@/lib/devtools/multi-tenant-devtools-store"
 import { listMockTenantHosts } from "@/lib/tenant/mock-tenant-context"
 import { normalizeHostname } from "@/lib/tenant/normalize-hostname"
+import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 import { getResolvedTenant } from "@/server/get-resolved-tenant"
 
 export const Route = createFileRoute("/host/$hostKey")({
@@ -29,7 +30,10 @@ export const Route = createFileRoute("/host/$hostKey")({
     }
   },
   loader: async ({ params }) => {
-    const resolvedTenant = await getResolvedTenant()
+    const [resolvedTenant, requestDebug] = await Promise.all([
+      getResolvedTenant(),
+      getRequestDebugInfo(),
+    ])
 
     if (!resolvedTenant || resolvedTenant.host !== params.hostKey) {
       throw notFound()
@@ -37,6 +41,7 @@ export const Route = createFileRoute("/host/$hostKey")({
 
     return {
       resolvedTenant,
+      requestDebug,
     }
   },
   notFoundComponent: UnknownHostNotFound,
@@ -44,7 +49,18 @@ export const Route = createFileRoute("/host/$hostKey")({
 })
 
 function TenantBoundary() {
-  const { resolvedTenant } = Route.useLoaderData()
+  const { resolvedTenant, requestDebug } = Route.useLoaderData()
+
+  useEffect(() => {
+    setMultiTenantDevtoolsSnapshot({
+      resolvedTenant,
+      requestDebug,
+    })
+
+    return () => {
+      clearMultiTenantDevtoolsSnapshot()
+    }
+  }, [requestDebug, resolvedTenant])
 
   return (
     <main className="min-h-svh bg-background px-6 py-12">
