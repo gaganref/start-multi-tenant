@@ -25,14 +25,10 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Multi-Tenant Lab — TanStack Start × Vercel",
+        title: "Multi-Tenant Lab — TanStack Start x Vercel",
       },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,
