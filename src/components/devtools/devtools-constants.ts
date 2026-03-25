@@ -3,9 +3,10 @@ import {
   Route01Icon,
   Building01Icon,
   ServerStack01Icon,
+  Activity01Icon,
 } from "@hugeicons/core-free-icons"
 
-export type TabId = "tenant" | "location" | "routes" | "headers"
+export type TabId = "tenant" | "location" | "rewrites" | "routes" | "headers"
 
 export const TABS: Array<{
   id: TabId
@@ -14,6 +15,7 @@ export const TABS: Array<{
 }> = [
   { id: "tenant", label: "Tenant", icon: Building01Icon },
   { id: "location", label: "Location", icon: Globe02Icon },
+  { id: "rewrites", label: "Rewrites", icon: Activity01Icon },
   { id: "routes", label: "Routes", icon: Route01Icon },
   { id: "headers", label: "Headers", icon: ServerStack01Icon },
 ]

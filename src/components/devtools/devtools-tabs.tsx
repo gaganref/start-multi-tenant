@@ -7,6 +7,11 @@ import {
   Search01Icon,
   Activity01Icon,
 } from "@hugeicons/core-free-icons"
+import {
+  applyTenantInputRewrite,
+  applyTenantOutputRewrite,
+  type RewriteTrace,
+} from "@/lib/tenant/rewrite-debug"
 import { cn } from "@/lib/utils"
 import { type useMultiTenantDevtoolsSnapshot } from "@/lib/devtools/multi-tenant-devtools-store"
 import { IMPORTANT_HEADERS } from "./devtools-constants"
@@ -217,6 +222,40 @@ export function RoutesTab({
   )
 }
 
+export function RewritesTab({
+  browserInfo,
+  location,
+}: {
+  browserInfo: { href: string; host: string; hostname: string } | null
+  location: ReturnType<typeof useLocation>
+}) {
+  const publicUrl = browserInfo ? new URL(browserInfo.href) : null
+  const inputTrace = publicUrl ? applyTenantInputRewrite(publicUrl).trace : null
+
+  const outputBase =
+    publicUrl?.origin ?? (typeof window !== "undefined" ? window.location.origin : null)
+  const internalUrl =
+    outputBase !== null ? new URL(location.href, outputBase) : null
+  const outputTrace = internalUrl ? applyTenantOutputRewrite(internalUrl).trace : null
+
+  if (!inputTrace && !outputTrace) {
+    return (
+      <EmptyState
+        icon={Activity01Icon}
+        title="No rewrite trace"
+        description="Open this panel in the browser to inspect rewrite input and output transformations."
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-px p-2.5 pb-3">
+      {inputTrace && <RewriteCard trace={inputTrace} />}
+      {outputTrace && <RewriteCard trace={outputTrace} />}
+    </div>
+  )
+}
+
 export function HeadersTab({
   headers,
   importantHeaders,
@@ -301,5 +340,60 @@ export function HeadersTab({
         )}
       </div>
     </div>
+  )
+}
+
+function RewriteCard({ trace }: { trace: RewriteTrace }) {
+  return (
+    <>
+      <SectionLabel>
+        {trace.stage === "input" ? "Input rewrite" : "Output rewrite"}
+        <span
+          className={cn(
+            "rounded-full px-1.5 text-[9px] font-semibold leading-4",
+            trace.applied
+              ? "bg-blue-500/12 text-blue-400"
+              : "bg-white/6 text-[#71717a]"
+          )}
+        >
+          {trace.applied ? "applied" : "skipped"}
+        </span>
+      </SectionLabel>
+      <DataGrid>
+        <DataRow label="Reason" value={trace.reason} />
+        <DataRow
+          label="Host key"
+          value={trace.hostKey ?? "n/a"}
+          copyable={!!trace.hostKey}
+          mono
+        />
+        <DataRow
+          label="Before path"
+          value={trace.before.pathname}
+          copyable
+          mono
+        />
+        <DataRow
+          label="After path"
+          value={trace.after.pathname}
+          copyable
+          mono
+          highlight={trace.applied}
+        />
+        <DataRow
+          label="Before href"
+          value={trace.before.href}
+          copyable
+          mono
+        />
+        <DataRow
+          label="After href"
+          value={trace.after.href}
+          copyable
+          mono
+          highlight={trace.applied}
+        />
+      </DataGrid>
+    </>
   )
 }

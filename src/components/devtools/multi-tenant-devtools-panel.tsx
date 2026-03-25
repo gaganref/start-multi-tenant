@@ -8,6 +8,7 @@ import { StatusPill } from "./devtools-primitives"
 import {
   TenantTab,
   LocationTab,
+  RewritesTab,
   RoutesTab,
   HeadersTab,
 } from "./devtools-tabs"
@@ -110,6 +111,9 @@ export function MultiTenantDevtoolsPanel() {
             location={location}
             hasRewrite={hasRewrite}
           />
+        )}
+        {activeTab === "rewrites" && (
+          <RewritesTab browserInfo={browserInfo} location={location} />
         )}
         {activeTab === "routes" && <RoutesTab matches={matches} />}
         {activeTab === "headers" && (
