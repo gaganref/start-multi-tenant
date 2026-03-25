@@ -1,23 +1,83 @@
 import { createFileRoute, useHydrated } from "@tanstack/react-router"
 import { toggleThemeMode, useTheme } from "@tanstack-themes/react"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
 
 export const Route = createFileRoute("/")({ component: Landing })
 
-function Landing() {
-  const [hostname, setHostname] = useState("")
-  const [subdomain, setSubdomain] = useState<string | null>(null)
+type TestStatus = "active" | "testing" | "planned"
 
-  useEffect(() => {
-    const host = window.location.hostname
-    setHostname(window.location.host)
-    const parts = host.split(".")
-    if (parts.length > 2) {
-      setSubdomain(parts[0])
-    }
-  }, [])
+type TestItem = {
+  title: string
+  description: string
+  status: TestStatus
+  tag: string
+}
+
+const statusDotClasses: Record<TestStatus, string> = {
+  active: "bg-emerald-500",
+  testing: "bg-amber-500",
+  planned: "bg-zinc-300 dark:bg-zinc-600",
+}
+
+const tests = [
+  {
+    title: "Subdomain Routing",
+    description:
+      "Tenant resolution via subdomain parsing. Each subdomain maps to a unique tenant context.",
+    status: "testing",
+    tag: "multi-tenancy",
+  },
+  {
+    title: "Custom Domains",
+    description:
+      "Map custom domains to specific tenants using Vercel's domain configuration API.",
+    status: "planned",
+    tag: "vercel",
+  },
+  {
+    title: "Edge Middleware",
+    description:
+      "Vercel middleware for request-time tenant resolution, rewrites, and auth checks.",
+    status: "testing",
+    tag: "vercel",
+  },
+  {
+    title: "ISR",
+    description:
+      "Incremental Static Regeneration with TanStack Start loaders on Vercel infrastructure.",
+    status: "planned",
+    tag: "tanstack",
+  },
+  {
+    title: "SSR Streaming",
+    description:
+      "React 19 streaming SSR with Suspense boundaries and progressive hydration.",
+    status: "active",
+    tag: "react",
+  },
+  {
+    title: "Deployment Pipeline",
+    description:
+      "End-to-end Vercel deployment with edge functions, serverless, and static assets.",
+    status: "active",
+    tag: "vercel",
+  },
+] satisfies ReadonlyArray<TestItem>
+
+const stack = [
+  "TanStack Start",
+  "TanStack Router",
+  "React 19",
+  "Vite 7",
+  "Nitro",
+  "Tailwind v4",
+  "shadcn/ui",
+  "Vercel",
+] as const
+
+function Landing() {
+  const tenantContext = useTenantContext()
 
   return (
     <div className="min-h-svh">
@@ -55,82 +115,81 @@ function Landing() {
 
       <section className="relative overflow-hidden">
         <div className="dot-pattern absolute inset-0 opacity-50" />
-        <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-20 sm:pt-32 sm:pb-28">
-          <div
-            className="animate-fade-up"
-            style={{ animationDelay: "0ms" }}
-          >
+        <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-6xl flex-col justify-center px-6 pt-24 pb-20 sm:pt-32 sm:pb-28">
+          <Reveal delay={0}>
             <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
               <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
               Experimental Playground
             </span>
-          </div>
+          </Reveal>
 
-          <h1
-            className="animate-fade-up font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.05] tracking-tight"
-            style={{ animationDelay: "80ms" }}
+          <Reveal
+            delay={80}
+            as="h1"
+            className="font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.05] tracking-tight"
           >
-            TanStack Start{" "}
-            <span className="text-muted-foreground/40">×</span>
-            <br />
-            <span className="text-muted-foreground">
-              Vercel Multi&#8209;Tenancy
-            </span>
-          </h1>
+            <>
+              TanStack Start <span className="text-muted-foreground/40">×</span>
+              <br />
+              <span className="text-muted-foreground">
+                Vercel Multi&#8209;Tenancy
+              </span>
+            </>
+          </Reveal>
 
-          <p
-            className="animate-fade-up mt-6 max-w-lg text-base leading-relaxed text-muted-foreground"
-            style={{ animationDelay: "160ms" }}
+          <Reveal
+            delay={160}
+            as="p"
+            className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground"
           >
             A testing ground for exploring how TanStack Start pairs with
             Vercel&apos;s multi-tenancy primitives&thinsp;&mdash;&thinsp;subdomains,
             custom domains, middleware, and incremental static regeneration.
-          </p>
+          </Reveal>
 
-          <div
-            className="animate-fade-up mt-10 flex items-center gap-3"
-            style={{ animationDelay: "240ms" }}
-          >
-            <Button
-              size="lg"
-              onClick={() =>
-                document
-                  .getElementById("tests")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
+          <Reveal delay={240} className="mt-10 flex items-center gap-3">
+            <a
+              href="#tests"
+              className={buttonVariants({ size: "lg" })}
             >
               Explore Tests
-            </Button>
+            </a>
             <a
               href="https://github.com/TanStack/router"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-all hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+              className={buttonVariants({ variant: "outline", size: "lg" })}
             >
               View Source
             </a>
-          </div>
+          </Reveal>
 
-          {hostname && (
-            <div
-              className="animate-fade-up mt-14 max-w-sm"
-              style={{ animationDelay: "320ms" }}
-            >
-              <div className="rounded-xl border border-border bg-card/80 p-5 shadow-sm backdrop-blur-sm">
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="size-1.5 rounded-full bg-emerald-500" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Live Context
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  <ContextRow label="Host" value={hostname} />
-                  <ContextRow label="Subdomain" value={subdomain ?? "none"} />
-                  <ContextRow label="Tenant" value={subdomain ?? "root"} mono />
-                </div>
+          <Reveal delay={320} className="mt-14 max-w-sm min-h-38">
+            <div className="rounded-xl border border-border bg-card/80 p-5 shadow-sm backdrop-blur-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="size-1.5 rounded-full bg-emerald-500" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                  Live Context
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                <ContextRow
+                  label="Host"
+                  value={tenantContext?.host ?? "resolving..."}
+                  mono
+                />
+                <ContextRow
+                  label="Subdomain"
+                  value={tenantContext?.subdomain ?? "none"}
+                />
+                <ContextRow
+                  label="Tenant"
+                  value={tenantContext?.tenant ?? "root"}
+                  mono
+                />
               </div>
             </div>
-          )}
+          </Reveal>
         </div>
       </section>
 
@@ -188,66 +247,44 @@ function Landing() {
   )
 }
 
-const tests: Array<{
-  title: string
-  description: string
-  status: "active" | "testing" | "planned"
-  tag: string
-}> = [
-  {
-    title: "Subdomain Routing",
-    description:
-      "Tenant resolution via subdomain parsing. Each subdomain maps to a unique tenant context.",
-    status: "testing",
-    tag: "multi-tenancy",
-  },
-  {
-    title: "Custom Domains",
-    description:
-      "Map custom domains to specific tenants using Vercel's domain configuration API.",
-    status: "planned",
-    tag: "vercel",
-  },
-  {
-    title: "Edge Middleware",
-    description:
-      "Vercel middleware for request-time tenant resolution, rewrites, and auth checks.",
-    status: "testing",
-    tag: "vercel",
-  },
-  {
-    title: "ISR",
-    description:
-      "Incremental Static Regeneration with TanStack Start loaders on Vercel infrastructure.",
-    status: "planned",
-    tag: "tanstack",
-  },
-  {
-    title: "SSR Streaming",
-    description:
-      "React 19 streaming SSR with Suspense boundaries and progressive hydration.",
-    status: "active",
-    tag: "react",
-  },
-  {
-    title: "Deployment Pipeline",
-    description:
-      "End-to-end Vercel deployment with edge functions, serverless, and static assets.",
-    status: "active",
-    tag: "vercel",
-  },
-]
+function useTenantContext() {
+  const hydrated = useHydrated()
 
-const stack = [
-  "TanStack Start",
-  "TanStack Router",
-  "React 19",
-  "Vite 7",
-  "Nitro",
-  "Tailwind v4",
-  "shadcn/ui",
-  "Vercel",
-]
+  if (!hydrated || typeof window === "undefined") {
+    return null
+  }
+
+  const { host, hostname } = window.location
+  const parts = hostname.split(".")
+  const subdomain = parts.length > 2 ? parts[0] : null
+
+  return {
+    host,
+    subdomain,
+    tenant: subdomain ?? "root",
+  }
+}
+
+function Reveal({
+  as: Component = "div",
+  delay,
+  className,
+  children,
+}: {
+  as?: "div" | "h1" | "p"
+  delay: number
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <Component
+      className={cn("animate-fade-up", className)}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {children}
+    </Component>
+  )
+}
 
 function ContextRow({
   label,
@@ -276,22 +313,16 @@ function TestCard({
 }: {
   title: string
   description: string
-  status: "active" | "testing" | "planned"
+  status: TestStatus
   tag: string
 }) {
-  const dotColor = {
-    active: "bg-emerald-500",
-    testing: "bg-amber-500",
-    planned: "bg-zinc-300 dark:bg-zinc-600",
-  }
-
   return (
     <div className="group rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-border/60 hover:shadow-md">
       <div className="mb-3 flex items-center justify-between">
         <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">
           {tag}
         </span>
-        <div className={cn("size-2 rounded-full", dotColor[status])} />
+        <div className={cn("size-2 rounded-full", statusDotClasses[status])} />
       </div>
       <h3 className="mb-1.5 text-sm font-medium transition-colors group-hover:text-foreground">
         {title}

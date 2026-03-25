@@ -42,15 +42,16 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  shellComponent: RootDocument,
   component: RootComponent,
 })
 
 function RootComponent() {
   return (
-    <RootDocument>
+    <>
       <ThemeProvider />
       <Outlet />
-    </RootDocument>
+    </>
   )
 }
 

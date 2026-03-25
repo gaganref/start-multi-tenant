@@ -183,19 +183,21 @@
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translate3d(0, 16px, 0);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @layer utilities {
   .animate-fade-up {
-    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
     opacity: 0;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .dot-pattern {
