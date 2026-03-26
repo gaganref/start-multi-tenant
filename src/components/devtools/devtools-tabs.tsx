@@ -81,6 +81,11 @@ export function TenantTab({
         />
         <DataRow label="Binding" value={resolvedTenant.kind} />
         <DataRow
+          label="Canonical host"
+          value={resolvedTenant.canonicalHost}
+          copyable
+        />
+        <DataRow
           label="Primary"
           value={resolvedTenant.isPrimary ? "Yes" : "No"}
         />

@@ -1,5 +1,5 @@
 import {
-  isRootHost,
+  classifyHostname,
   normalizeHostname,
 } from "@/lib/tenant/normalize-hostname"
 
@@ -28,10 +28,11 @@ function createSnapshot(url: URL): RewriteSnapshot {
 
 export function applyTenantInputRewrite(sourceUrl: URL) {
   const nextUrl = new URL(sourceUrl.href)
+  const classification = classifyHostname(nextUrl.hostname)
   const hostKey = normalizeHostname(nextUrl.hostname)
   const before = createSnapshot(nextUrl)
 
-  if (isRootHost(hostKey)) {
+  if (classification.kind === "platform") {
     return {
       url: nextUrl,
       trace: {
@@ -68,7 +69,9 @@ export function applyTenantInputRewrite(sourceUrl: URL) {
       stage: "input",
       applied: true,
       reason:
-        "Mapped the incoming host to the internal host route namespace for tenant resolution.",
+        classification.kind === "tenant-subdomain"
+          ? `Mapped the tenant subdomain on ${classification.baseDomain} to the internal host route namespace.`
+          : "Mapped the custom domain to the internal host route namespace for tenant resolution.",
       hostKey,
       before,
       after: createSnapshot(nextUrl),

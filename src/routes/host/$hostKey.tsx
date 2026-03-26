@@ -14,7 +14,10 @@ import {
   setMultiTenantDevtoolsSnapshot,
 } from "@/lib/devtools/multi-tenant-devtools-store"
 import { listMockTenantHosts } from "@/lib/tenant/mock-tenant-context"
-import { normalizeHostname } from "@/lib/tenant/normalize-hostname"
+import {
+  classifyHostname,
+  normalizeHostname,
+} from "@/lib/tenant/normalize-hostname"
 import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 import { getResolvedTenant } from "@/server/get-resolved-tenant"
 
@@ -50,6 +53,7 @@ export const Route = createFileRoute("/host/$hostKey")({
 
 function TenantBoundary() {
   const { resolvedTenant, requestDebug } = Route.useLoaderData()
+  const hostnameInfo = classifyHostname(resolvedTenant.host)
 
   useEffect(() => {
     setMultiTenantDevtoolsSnapshot({
@@ -99,9 +103,55 @@ function TenantBoundary() {
             <ContextRow label="Tenant name" value={resolvedTenant.tenantName} />
             <ContextRow label="Binding kind" value={resolvedTenant.kind} />
             <ContextRow
+              label="Canonical host"
+              value={resolvedTenant.canonicalHost}
+            />
+            <ContextRow
               label="Primary host"
               value={resolvedTenant.isPrimary ? "yes" : "no"}
             />
+            <ContextRow label="Host classification" value={hostnameInfo.kind} />
+            <ContextRow
+              label="Base domain"
+              value={
+                hostnameInfo.kind === "tenant-subdomain"
+                  ? hostnameInfo.baseDomain
+                  : "custom"
+              }
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rendering strategy pages</CardTitle>
+            <CardDescription>
+              Both pages share the same tenant shell. One renders on the server
+              and one is client-only so you can compare behavior cleanly.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/host/$hostKey"
+              params={{ hostKey: resolvedTenant.host }}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Home
+            </Link>
+            <Link
+              to="/host/$hostKey/ssr"
+              params={{ hostKey: resolvedTenant.host }}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              SSR page
+            </Link>
+            <Link
+              to="/host/$hostKey/csr"
+              params={{ hostKey: resolvedTenant.host }}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              CSR page
+            </Link>
           </CardContent>
         </Card>
 
@@ -125,6 +175,9 @@ function TenantBoundary() {
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {tenant.tenantName} ({tenant.tenantSlug})
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  canonical: {tenant.canonicalHost}
                 </p>
               </div>
             ))}
@@ -181,6 +234,10 @@ function UnknownHostNotFound() {
 function getPlatformHref(hostKey: string) {
   if (hostKey.endsWith(".localhost")) {
     return "http://localhost:3000/"
+  }
+
+  if (hostKey.endsWith(".relio.dev")) {
+    return "https://relio.dev/"
   }
 
   return null

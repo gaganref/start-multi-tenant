@@ -6,6 +6,7 @@ export type ResolvedTenantContext = {
   tenantSlug: string
   tenantName: string
   kind: "subdomain" | "custom-domain"
+  canonicalHost: string
   isPrimary: boolean
   status: "active" | "suspended"
 }
@@ -19,6 +20,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       tenantSlug: "acme",
       tenantName: "Acme Inc.",
       kind: "subdomain",
+      canonicalHost: "acme.localhost",
       isPrimary: true,
       status: "active",
     },
@@ -31,31 +33,73 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       tenantSlug: "globex",
       tenantName: "Globex Corp.",
       kind: "subdomain",
+      canonicalHost: "globex.localhost",
       isPrimary: true,
       status: "active",
     },
   ],
   [
-    "acme.test",
+    "desapps.localhost",
     {
-      host: "acme.test",
-      tenantId: "tenant_acme",
-      tenantSlug: "acme",
-      tenantName: "Acme Inc.",
-      kind: "custom-domain",
+      host: "desapps.localhost",
+      tenantId: "tenant_desapps",
+      tenantSlug: "desapps",
+      tenantName: "Desapps",
+      kind: "subdomain",
+      canonicalHost: "desapps.com",
       isPrimary: false,
       status: "active",
     },
   ],
   [
-    "globex.test",
+    "acme.relio.dev",
     {
-      host: "globex.test",
+      host: "acme.relio.dev",
+      tenantId: "tenant_acme",
+      tenantSlug: "acme",
+      tenantName: "Acme Inc.",
+      kind: "subdomain",
+      canonicalHost: "acme.relio.dev",
+      isPrimary: true,
+      status: "active",
+    },
+  ],
+  [
+    "globex.relio.dev",
+    {
+      host: "globex.relio.dev",
       tenantId: "tenant_globex",
       tenantSlug: "globex",
       tenantName: "Globex Corp.",
-      kind: "custom-domain",
+      kind: "subdomain",
+      canonicalHost: "globex.relio.dev",
+      isPrimary: true,
+      status: "active",
+    },
+  ],
+  [
+    "desapps.relio.dev",
+    {
+      host: "desapps.relio.dev",
+      tenantId: "tenant_desapps",
+      tenantSlug: "desapps",
+      tenantName: "Desapps",
+      kind: "subdomain",
+      canonicalHost: "desapps.com",
       isPrimary: false,
+      status: "active",
+    },
+  ],
+  [
+    "desapps.com",
+    {
+      host: "desapps.com",
+      tenantId: "tenant_desapps",
+      tenantSlug: "desapps",
+      tenantName: "Desapps",
+      kind: "custom-domain",
+      canonicalHost: "desapps.com",
+      isPrimary: true,
       status: "active",
     },
   ],

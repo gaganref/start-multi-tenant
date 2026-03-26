@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HostHostKeyRouteImport } from './routes/host/$hostKey'
 import { Route as HostHostKeyIndexRouteImport } from './routes/host/$hostKey.index'
+import { Route as HostHostKeySsrRouteImport } from './routes/host/$hostKey.ssr'
+import { Route as HostHostKeyCsrRouteImport } from './routes/host/$hostKey.csr'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,28 +30,55 @@ const HostHostKeyIndexRoute = HostHostKeyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => HostHostKeyRoute,
 } as any)
+const HostHostKeySsrRoute = HostHostKeySsrRouteImport.update({
+  id: '/ssr',
+  path: '/ssr',
+  getParentRoute: () => HostHostKeyRoute,
+} as any)
+const HostHostKeyCsrRoute = HostHostKeyCsrRouteImport.update({
+  id: '/csr',
+  path: '/csr',
+  getParentRoute: () => HostHostKeyRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/host/$hostKey': typeof HostHostKeyRouteWithChildren
+  '/host/$hostKey/csr': typeof HostHostKeyCsrRoute
+  '/host/$hostKey/ssr': typeof HostHostKeySsrRoute
   '/host/$hostKey/': typeof HostHostKeyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/host/$hostKey/csr': typeof HostHostKeyCsrRoute
+  '/host/$hostKey/ssr': typeof HostHostKeySsrRoute
   '/host/$hostKey': typeof HostHostKeyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/host/$hostKey': typeof HostHostKeyRouteWithChildren
+  '/host/$hostKey/csr': typeof HostHostKeyCsrRoute
+  '/host/$hostKey/ssr': typeof HostHostKeySsrRoute
   '/host/$hostKey/': typeof HostHostKeyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/host/$hostKey' | '/host/$hostKey/'
+  fullPaths:
+    | '/'
+    | '/host/$hostKey'
+    | '/host/$hostKey/csr'
+    | '/host/$hostKey/ssr'
+    | '/host/$hostKey/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/host/$hostKey'
-  id: '__root__' | '/' | '/host/$hostKey' | '/host/$hostKey/'
+  to: '/' | '/host/$hostKey/csr' | '/host/$hostKey/ssr' | '/host/$hostKey'
+  id:
+    | '__root__'
+    | '/'
+    | '/host/$hostKey'
+    | '/host/$hostKey/csr'
+    | '/host/$hostKey/ssr'
+    | '/host/$hostKey/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,14 +109,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HostHostKeyIndexRouteImport
       parentRoute: typeof HostHostKeyRoute
     }
+    '/host/$hostKey/ssr': {
+      id: '/host/$hostKey/ssr'
+      path: '/ssr'
+      fullPath: '/host/$hostKey/ssr'
+      preLoaderRoute: typeof HostHostKeySsrRouteImport
+      parentRoute: typeof HostHostKeyRoute
+    }
+    '/host/$hostKey/csr': {
+      id: '/host/$hostKey/csr'
+      path: '/csr'
+      fullPath: '/host/$hostKey/csr'
+      preLoaderRoute: typeof HostHostKeyCsrRouteImport
+      parentRoute: typeof HostHostKeyRoute
+    }
   }
 }
 
 interface HostHostKeyRouteChildren {
+  HostHostKeyCsrRoute: typeof HostHostKeyCsrRoute
+  HostHostKeySsrRoute: typeof HostHostKeySsrRoute
   HostHostKeyIndexRoute: typeof HostHostKeyIndexRoute
 }
 
 const HostHostKeyRouteChildren: HostHostKeyRouteChildren = {
+  HostHostKeyCsrRoute: HostHostKeyCsrRoute,
+  HostHostKeySsrRoute: HostHostKeySsrRoute,
   HostHostKeyIndexRoute: HostHostKeyIndexRoute,
 }
 
