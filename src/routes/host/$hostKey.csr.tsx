@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react"
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
 const hostRoute = getRouteApi("/host/$hostKey")
 
@@ -24,25 +17,72 @@ function TenantCsrPage() {
   }, [])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>CSR tenant page</CardTitle>
-        <CardDescription>
-          This page disables SSR at the route level. The timestamp below is set
-          after mount, so it only appears once the client renders the page.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold tracking-tight">
+          Client-Side Rendering
+        </h3>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          This page sets{" "}
+          <code className="font-mono text-xs text-foreground">ssr: false</code>{" "}
+          at the route level. The timestamp is set via{" "}
+          <code className="font-mono text-xs text-foreground">useEffect</code>{" "}
+          after the client mounts.
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         <DataRow label="Tenant" value={resolvedTenant.tenantName} />
-        <DataRow label="Strategy" value="csr" />
+        <DataRow label="Strategy" value="csr" mono />
         <DataRow
           label="Hydrated at"
-          value={hydratedAt ?? "waiting for client mount..."}
+          value={hydratedAt ?? "waiting for client mount\u2026"}
           mono
         />
         <DataRow label="Host" value={resolvedTenant.host} mono />
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="rounded-lg border border-border/70 bg-muted/10 p-4">
+        <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          How it works
+        </p>
+        <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <span className="mt-px text-tenant-solid">&bull;</span>
+            <span>
+              Route has{" "}
+              <code className="font-mono text-[11px] text-foreground">
+                ssr: false
+              </code>
+              , so no server HTML is generated for this page
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="mt-px text-tenant-solid">&bull;</span>
+            <span>
+              On initial load, the page shell arrives empty &mdash; content
+              renders after JavaScript loads
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="mt-px text-tenant-solid">&bull;</span>
+            <span>
+              <code className="font-mono text-[11px] text-foreground">
+                useEffect
+              </code>{" "}
+              fires after mount and sets the timestamp
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="mt-px text-tenant-solid">&bull;</span>
+            <span>
+              Compare with the SSR page &mdash; notice the SSR timestamp is set
+              immediately
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
   )
 }
 
@@ -56,11 +96,13 @@ function DataRow({
   mono?: boolean
 }) {
   return (
-    <div className="rounded-lg border border-border/70 bg-muted/20 p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-lg border border-border/70 bg-muted/10 p-3">
+      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
         {label}
       </p>
-      <p className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>{value}</p>
+      <p className={mono ? "mt-1 font-mono text-sm" : "mt-1 text-sm"}>
+        {value}
+      </p>
     </div>
   )
 }

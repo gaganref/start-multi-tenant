@@ -1,19 +1,16 @@
-import { useEffect } from "react"
-import { Link, Outlet, createFileRoute, notFound } from "@tanstack/react-router"
+import { Fragment, useEffect } from "react"
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  notFound,
+} from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   clearMultiTenantDevtoolsSnapshot,
   setMultiTenantDevtoolsSnapshot,
 } from "@/lib/devtools/multi-tenant-devtools-store"
-import { listMockTenantHosts } from "@/lib/tenant/mock-tenant-context"
 import {
   classifyHostname,
   normalizeHostname,
@@ -27,10 +24,7 @@ export const Route = createFileRoute("/host/$hostKey")({
     if (normalizeHostname(params.hostKey) !== params.hostKey) {
       throw notFound()
     }
-
-    return {
-      hostKey: params.hostKey,
-    }
+    return { hostKey: params.hostKey }
   },
   loader: async ({ params }) => {
     const [resolvedTenant, requestDebug] = await Promise.all([
@@ -42,43 +36,83 @@ export const Route = createFileRoute("/host/$hostKey")({
       throw notFound()
     }
 
-    return {
-      resolvedTenant,
-      requestDebug,
-    }
+    return { resolvedTenant, requestDebug }
   },
   notFoundComponent: UnknownHostNotFound,
   component: TenantBoundary,
 })
+
+const tabClasses = {
+  base: "border-b-2 px-4 py-3 font-mono text-xs transition-colors",
+  active: "border-tenant-solid text-tenant-text font-medium",
+  inactive: "border-transparent text-muted-foreground hover:text-foreground",
+}
 
 function TenantBoundary() {
   const { resolvedTenant, requestDebug } = Route.useLoaderData()
   const hostnameInfo = classifyHostname(resolvedTenant.host)
 
   useEffect(() => {
-    setMultiTenantDevtoolsSnapshot({
-      resolvedTenant,
-      requestDebug,
-    })
-
-    return () => {
-      clearMultiTenantDevtoolsSnapshot()
-    }
+    setMultiTenantDevtoolsSnapshot({ resolvedTenant, requestDebug })
+    return () => clearMultiTenantDevtoolsSnapshot()
   }, [requestDebug, resolvedTenant])
 
+  const journey = [
+    {
+      num: "01",
+      title: "Request",
+      data: resolvedTenant.host,
+    },
+    {
+      num: "02",
+      title: "Parse",
+      data:
+        hostnameInfo.kind === "tenant-subdomain"
+          ? `sub: "${hostnameInfo.subdomain}" \u00b7 base: "${hostnameInfo.baseDomain}"`
+          : hostnameInfo.kind === "custom-domain"
+            ? "custom domain binding"
+            : "platform host",
+    },
+    {
+      num: "03",
+      title: "Resolve",
+      data: `${resolvedTenant.tenantId} \u2192 ${resolvedTenant.tenantName}`,
+    },
+    {
+      num: "04",
+      title: "Render",
+      data: "tenant shell + child route",
+    },
+  ]
+
   return (
-    <main className="min-h-svh bg-background px-6 py-12">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div
+      data-accent={resolvedTenant.accent}
+      className="min-h-dvh bg-background"
+    >
+      {/* ── Accent bar ───────────────────────────────── */}
+      <div className="h-0.5 bg-tenant-solid" />
+
+      {/* ── Header ───────────────────────────────────── */}
+      <header className="border-b border-border/40">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-sm text-muted-foreground">Tenant boundary</p>
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <Link
+              to="/"
+              className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              &larr; back to lab
+            </Link>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
               {resolvedTenant.tenantName}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{resolvedTenant.kind}</Badge>
+            <Badge variant="outline" className="font-mono text-[10px]">
+              {resolvedTenant.kind}
+            </Badge>
             <Badge
+              className="font-mono text-[10px]"
               variant={
                 resolvedTenant.status === "active" ? "default" : "destructive"
               }
@@ -87,112 +121,113 @@ function TenantBoundary() {
             </Badge>
           </div>
         </div>
+      </header>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Resolved tenant context</CardTitle>
-            <CardDescription>
-              This shell owns the tenant loader and keeps the resolved tenant
-              data close to the route that fetched it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <ContextRow label="Host key" value={resolvedTenant.host} />
-            <ContextRow label="Tenant ID" value={resolvedTenant.tenantId} />
-            <ContextRow label="Tenant slug" value={resolvedTenant.tenantSlug} />
-            <ContextRow label="Tenant name" value={resolvedTenant.tenantName} />
-            <ContextRow label="Binding kind" value={resolvedTenant.kind} />
-            <ContextRow
-              label="Canonical host"
-              value={resolvedTenant.canonicalHost}
-            />
-            <ContextRow
-              label="Primary host"
-              value={resolvedTenant.isPrimary ? "yes" : "no"}
-            />
-            <ContextRow label="Host classification" value={hostnameInfo.kind} />
-            <ContextRow
-              label="Base domain"
-              value={
-                hostnameInfo.kind === "tenant-subdomain"
-                  ? hostnameInfo.baseDomain
-                  : "custom"
-              }
-            />
-          </CardContent>
-        </Card>
+      <main className="mx-auto max-w-5xl px-6">
+        {/* ── Request Journey ────────────────────────── */}
+        <section className="border-b border-border/40 py-8">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Request Journey
+          </p>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Rendering strategy pages</CardTitle>
-            <CardDescription>
-              Both pages share the same tenant shell. One renders on the server
-              and one is client-only so you can compare behavior cleanly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Link
-              to="/host/$hostKey"
-              params={{ hostKey: resolvedTenant.host }}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              Home
-            </Link>
-            <Link
-              to="/host/$hostKey/ssr"
-              params={{ hostKey: resolvedTenant.host }}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              SSR page
-            </Link>
-            <Link
-              to="/host/$hostKey/csr"
-              params={{ hostKey: resolvedTenant.host }}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              CSR page
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Try these hosts</CardTitle>
-            <CardDescription>
-              The in-memory resolver is keyed by normalized hostname, so these
-              are the values currently supported.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {listMockTenantHosts().map((tenant) => (
-              <div
-                key={tenant.host}
-                className="rounded-lg border border-border/70 bg-muted/30 p-3"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-sm">{tenant.host}</span>
-                  <Badge variant="outline">{tenant.kind}</Badge>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-0">
+            {journey.map((step, i) => (
+              <Fragment key={step.num}>
+                {i > 0 && (
+                  <>
+                    <div className="hidden shrink-0 items-center px-2 text-muted-foreground/25 sm:flex">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3 7h8M8 3.5 11.5 7 8 10.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex justify-center py-0.5 sm:hidden">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        className="text-muted-foreground/25"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M7 3v8M3.5 8 7 11.5 10.5 8"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </>
+                )}
+                <div className="flex-1 rounded-md border border-border/70 bg-muted/10 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-lg font-bold text-muted-foreground/20">
+                      {step.num}
+                    </span>
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {step.title}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-mono text-xs text-tenant-text">
+                    {step.data}
+                  </p>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {tenant.tenantName} ({tenant.tenantSlug})
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  canonical: {tenant.canonicalHost}
-                </p>
-              </div>
+              </Fragment>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <div className="flex items-center gap-3">
-          <Link to="/" className={buttonVariants({ variant: "outline" })}>
-            Back to root
+        {/* ── Tab Navigation ─────────────────────────── */}
+        <nav className="flex gap-0 border-b border-border/40">
+          <Link
+            to="/host/$hostKey"
+            params={{ hostKey: resolvedTenant.host }}
+            activeOptions={{ exact: true }}
+            className={tabClasses.base}
+            activeProps={{ className: tabClasses.active }}
+            inactiveProps={{ className: tabClasses.inactive }}
+          >
+            Overview
           </Link>
-        </div>
+          <Link
+            to="/host/$hostKey/ssr"
+            params={{ hostKey: resolvedTenant.host }}
+            className={tabClasses.base}
+            activeProps={{ className: tabClasses.active }}
+            inactiveProps={{ className: tabClasses.inactive }}
+          >
+            SSR
+          </Link>
+          <Link
+            to="/host/$hostKey/csr"
+            params={{ hostKey: resolvedTenant.host }}
+            className={tabClasses.base}
+            activeProps={{ className: tabClasses.active }}
+            inactiveProps={{ className: tabClasses.inactive }}
+          >
+            CSR
+          </Link>
+        </nav>
 
-        <Outlet />
-      </div>
-    </main>
+        {/* ── Child route content ────────────────────── */}
+        <div className="py-8">
+          <Outlet />
+        </div>
+      </main>
+    </div>
   )
 }
 
@@ -201,12 +236,12 @@ function UnknownHostNotFound() {
   const platformHref = getPlatformHref(hostKey)
 
   return (
-    <div className="flex min-h-[60svh] items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="flex min-h-[60dvh] items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           Unknown tenant host
         </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-3 text-xl font-semibold tracking-tight">
           {hostKey} is not configured
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -214,14 +249,14 @@ function UnknownHostNotFound() {
           find any tenant context for it.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          {platformHref ? (
+          {platformHref && (
             <a
               href={platformHref}
               className={buttonVariants({ variant: "outline" })}
             >
               Go to platform root
             </a>
-          ) : null}
+          )}
           <Link to="/" className={buttonVariants({ variant: "ghost" })}>
             Retry current host
           </Link>
@@ -232,24 +267,7 @@ function UnknownHostNotFound() {
 }
 
 function getPlatformHref(hostKey: string) {
-  if (hostKey.endsWith(".localhost")) {
-    return "http://localhost:3000/"
-  }
-
-  if (hostKey.endsWith(".relio.dev")) {
-    return "https://relio.dev/"
-  }
-
+  if (hostKey.endsWith(".localhost")) return "http://localhost:3000/"
+  if (hostKey.endsWith(".relio.dev")) return "https://relio.dev/"
   return null
-}
-
-function ContextRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border/70 bg-muted/20 p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-sm">{value}</p>
-    </div>
-  )
 }

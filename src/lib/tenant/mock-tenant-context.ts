@@ -1,4 +1,5 @@
 import { normalizeHostname } from "@/lib/tenant/normalize-hostname"
+import type { TenantAccent } from "@/lib/tenant/tenant-colors"
 
 export type ResolvedTenantContext = {
   host: string
@@ -9,6 +10,7 @@ export type ResolvedTenantContext = {
   canonicalHost: string
   isPrimary: boolean
   status: "active" | "suspended"
+  accent: TenantAccent
 }
 
 const resolvedTenants = new Map<string, ResolvedTenantContext>([
@@ -23,6 +25,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "acme.localhost",
       isPrimary: true,
       status: "active",
+      accent: "blue",
     },
   ],
   [
@@ -36,6 +39,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "globex.localhost",
       isPrimary: true,
       status: "active",
+      accent: "amber",
     },
   ],
   [
@@ -49,6 +53,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "desapps.com",
       isPrimary: false,
       status: "active",
+      accent: "violet",
     },
   ],
   [
@@ -62,6 +67,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "acme.relio.dev",
       isPrimary: true,
       status: "active",
+      accent: "blue",
     },
   ],
   [
@@ -75,6 +81,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "globex.relio.dev",
       isPrimary: true,
       status: "active",
+      accent: "amber",
     },
   ],
   [
@@ -88,6 +95,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "desapps.com",
       isPrimary: false,
       status: "active",
+      accent: "violet",
     },
   ],
   [
@@ -101,6 +109,7 @@ const resolvedTenants = new Map<string, ResolvedTenantContext>([
       canonicalHost: "desapps.com",
       isPrimary: true,
       status: "active",
+      accent: "violet",
     },
   ],
 ])
@@ -111,4 +120,37 @@ export function getMockResolvedTenant(hostname: string) {
 
 export function listMockTenantHosts() {
   return [...resolvedTenants.values()]
+}
+
+export type TenantSummary = {
+  slug: string
+  name: string
+  accent: TenantAccent
+  hosts: Array<{
+    host: string
+    kind: "subdomain" | "custom-domain"
+    isPrimary: boolean
+  }>
+}
+
+export function listUniqueTenants(): TenantSummary[] {
+  const grouped = new Map<string, TenantSummary>()
+  for (const tenant of resolvedTenants.values()) {
+    let summary = grouped.get(tenant.tenantSlug)
+    if (!summary) {
+      summary = {
+        slug: tenant.tenantSlug,
+        name: tenant.tenantName,
+        accent: tenant.accent,
+        hosts: [],
+      }
+      grouped.set(tenant.tenantSlug, summary)
+    }
+    summary.hosts.push({
+      host: tenant.host,
+      kind: tenant.kind,
+      isPrimary: tenant.isPrimary,
+    })
+  }
+  return [...grouped.values()]
 }
