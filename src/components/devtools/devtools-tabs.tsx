@@ -97,6 +97,11 @@ export function TenantTab({
           <SectionLabel>Request snapshot</SectionLabel>
           <DataGrid>
             <DataRow label="Host" value={requestDebug.host} copyable />
+            <DataRow
+              label="Normalized host"
+              value={requestDebug.normalizedHost}
+              copyable
+            />
             <DataRow label="Protocol" value={requestDebug.protocol} />
             <DataRow label="URL" value={requestDebug.url} copyable mono />
             <DataRow

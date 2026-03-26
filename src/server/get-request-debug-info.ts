@@ -1,23 +1,18 @@
 import { createServerFn } from "@tanstack/react-start"
-import {
-  getRequestHeaders,
-  getRequestHost,
-  getRequestProtocol,
-  getRequestUrl,
-} from "@tanstack/react-start/server"
+import { getRequestHeaders } from "@tanstack/react-start/server"
 import { redactRequestHeaders } from "@/lib/tenant/request-debug-info"
+import { getNormalizedRequestMeta } from "@/server/get-normalized-request-meta"
 
 export const getRequestDebugInfo = createServerFn({ method: "GET" }).handler(
   async () => {
     const headers = Object.fromEntries(getRequestHeaders().entries())
+    const requestMeta = getNormalizedRequestMeta()
 
     return {
-      host: getRequestHost({ xForwardedHost: true }),
-      protocol: getRequestProtocol({ xForwardedProto: true }),
-      url: getRequestUrl({
-        xForwardedHost: true,
-        xForwardedProto: true,
-      }).toString(),
+      host: requestMeta.host,
+      normalizedHost: requestMeta.normalizedHost,
+      protocol: requestMeta.protocol,
+      url: requestMeta.url.toString(),
       headers: redactRequestHeaders(headers),
     }
   }

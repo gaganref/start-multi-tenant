@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react"
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
+import { setMultiTenantDevtoolsRequestDebug } from "@/lib/devtools/multi-tenant-devtools-store"
+import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 
 const hostRoute = getRouteApi("/host/$hostKey")
 
 export const Route = createFileRoute("/host/$hostKey/csr")({
   ssr: false,
+  loader: async () => {
+    return {
+      requestDebug: await getRequestDebugInfo(),
+    }
+  },
   component: TenantCsrPage,
 })
 
 function TenantCsrPage() {
   const { resolvedTenant } = hostRoute.useLoaderData()
+  const { requestDebug } = Route.useLoaderData()
   const [hydratedAt, setHydratedAt] = useState<string | null>(null)
 
   useEffect(() => {
     setHydratedAt(new Date().toISOString())
   }, [])
+
+  useEffect(() => {
+    setMultiTenantDevtoolsRequestDebug(requestDebug)
+  }, [requestDebug])
 
   return (
     <div className="space-y-6">

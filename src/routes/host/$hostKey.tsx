@@ -9,13 +9,12 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
   clearMultiTenantDevtoolsSnapshot,
-  setMultiTenantDevtoolsSnapshot,
+  setMultiTenantDevtoolsResolvedTenant,
 } from "@/lib/devtools/multi-tenant-devtools-store"
 import {
   classifyHostname,
   normalizeHostname,
 } from "@/lib/tenant/normalize-hostname"
-import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 import { getResolvedTenant } from "@/server/get-resolved-tenant"
 
 export const Route = createFileRoute("/host/$hostKey")({
@@ -27,16 +26,13 @@ export const Route = createFileRoute("/host/$hostKey")({
     return { hostKey: params.hostKey }
   },
   loader: async ({ params }) => {
-    const [resolvedTenant, requestDebug] = await Promise.all([
-      getResolvedTenant(),
-      getRequestDebugInfo(),
-    ])
+    const resolvedTenant = await getResolvedTenant()
 
     if (!resolvedTenant || resolvedTenant.host !== params.hostKey) {
       throw notFound()
     }
 
-    return { resolvedTenant, requestDebug }
+    return { resolvedTenant }
   },
   notFoundComponent: UnknownHostNotFound,
   component: TenantBoundary,
@@ -49,13 +45,13 @@ const tabClasses = {
 }
 
 function TenantBoundary() {
-  const { resolvedTenant, requestDebug } = Route.useLoaderData()
+  const { resolvedTenant } = Route.useLoaderData()
   const hostnameInfo = classifyHostname(resolvedTenant.host)
 
   useEffect(() => {
-    setMultiTenantDevtoolsSnapshot({ resolvedTenant, requestDebug })
+    setMultiTenantDevtoolsResolvedTenant(resolvedTenant)
     return () => clearMultiTenantDevtoolsSnapshot()
-  }, [requestDebug, resolvedTenant])
+  }, [resolvedTenant])
 
   const journey = [
     {

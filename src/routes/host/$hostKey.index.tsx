@@ -1,21 +1,34 @@
+import { useEffect } from "react"
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
+import { setMultiTenantDevtoolsRequestDebug } from "@/lib/devtools/multi-tenant-devtools-store"
 import { listMockTenantHosts } from "@/lib/tenant/mock-tenant-context"
 import { classifyHostname } from "@/lib/tenant/normalize-hostname"
 import { accentLabel } from "@/lib/tenant/tenant-colors"
+import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 
 const hostRoute = getRouteApi("/host/$hostKey")
 
 export const Route = createFileRoute("/host/$hostKey/")({
+  loader: async () => {
+    return {
+      requestDebug: await getRequestDebugInfo(),
+    }
+  },
   component: TenantOverviewPage,
 })
 
 function TenantOverviewPage() {
   const { resolvedTenant } = hostRoute.useLoaderData()
+  const { requestDebug } = Route.useLoaderData()
   const hostnameInfo = classifyHostname(resolvedTenant.host)
   const tenantHosts = listMockTenantHosts().filter(
     (h) => h.tenantSlug === resolvedTenant.tenantSlug,
   )
+
+  useEffect(() => {
+    setMultiTenantDevtoolsRequestDebug(requestDebug)
+  }, [requestDebug])
 
   return (
     <div className="space-y-8">

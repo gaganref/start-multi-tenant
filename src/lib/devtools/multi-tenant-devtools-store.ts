@@ -20,10 +20,23 @@ function emitChange() {
   }
 }
 
-export function setMultiTenantDevtoolsSnapshot(
-  nextSnapshot: MultiTenantDevtoolsSnapshot
+export function setMultiTenantDevtoolsResolvedTenant(
+  resolvedTenant: ResolvedTenantContext | null
 ) {
-  snapshot = nextSnapshot
+  snapshot = {
+    ...snapshot,
+    resolvedTenant,
+  }
+  emitChange()
+}
+
+export function setMultiTenantDevtoolsRequestDebug(
+  requestDebug: RequestDebugInfo | null
+) {
+  snapshot = {
+    ...snapshot,
+    requestDebug,
+  }
   emitChange()
 }
 

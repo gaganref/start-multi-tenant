@@ -1,10 +1,14 @@
+import { useEffect } from "react"
 import { createFileRoute, getRouteApi } from "@tanstack/react-router"
+import { setMultiTenantDevtoolsRequestDebug } from "@/lib/devtools/multi-tenant-devtools-store"
+import { getRequestDebugInfo } from "@/server/get-request-debug-info"
 
 const hostRoute = getRouteApi("/host/$hostKey")
 
 export const Route = createFileRoute("/host/$hostKey/ssr")({
   loader: async () => {
     return {
+      requestDebug: await getRequestDebugInfo(),
       renderedAt: new Date().toISOString(),
       strategy: "ssr" as const,
     }
@@ -14,7 +18,11 @@ export const Route = createFileRoute("/host/$hostKey/ssr")({
 
 function TenantSsrPage() {
   const { resolvedTenant } = hostRoute.useLoaderData()
-  const { renderedAt, strategy } = Route.useLoaderData()
+  const { renderedAt, requestDebug, strategy } = Route.useLoaderData()
+
+  useEffect(() => {
+    setMultiTenantDevtoolsRequestDebug(requestDebug)
+  }, [requestDebug])
 
   return (
     <div className="space-y-6">

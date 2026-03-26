@@ -1,5 +1,6 @@
 export type RequestDebugInfo = {
   host: string
+  normalizedHost: string
   protocol: string
   url: string
   headers: Record<string, string>
